@@ -1,0 +1,8 @@
+# ignore files starting with a literal “#”
+\#*
+
+# ignore files starting with “.#”
+.#*
+
+# ignore editor/backup temp files ending in “~”
+*~
