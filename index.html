@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Ensure full-screen viewport on iOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sona Drawing App</title>
 
   <!-- Core styles -->
@@ -14,28 +15,30 @@
     // Determine mobile vs desktop
     window.isMobile = /iPhone|Android.*Mobile/.test(navigator.userAgent)
       || window.matchMedia('(max-width: 767px)').matches;
-    // Load appropriate stylesheet
-    document.getElementById('theme-css').href =
-      window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
+    // Load appropriate stylesheet after DOMContentLoaded
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('theme-css').href =
+        window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
+    });
   </script>
 </head>
 <body>
-  <!-- Root container for controls -->
+  <!-- Root container for controls and canvas -->
   <div id="app"></div>
 
-  <!-- Canvas element -->
-  <canvas id="sd-canvas"></canvas>
-
-  <!-- Bootstrap module -->
+  <!-- Viewport-height fix for iOS -->
   <script type="module" src="init.js"></script>
 
-  <!-- Load UI behavior based on device -->
+  <!-- Load and initialize UI based on device -->
   <script type="module">
-    if (window.isMobile) {
-      import('./src/ui/mobileUI.js');
-    } else {
-      import('./src/ui/desktopUI.js');
-    }
+    (async () => {
+      const uiModule = await import(
+        window.isMobile 
+          ? './src/ui/mobileUI.js'
+          : './src/ui/desktopUI.js'
+      );
+      if (uiModule.setup) uiModule.setup();
+    })();
   </script>
 </body>
 </html>

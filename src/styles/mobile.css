@@ -13,29 +13,33 @@
 :root {
   --mobile-padding: 5%;
   --button-size: 44px;
-  --button-margin: 4px;
+  --button-margin: 8px;
 }
 
-/* 3) Base reset */
+/* 3) Base reset and safe-area support */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  /* make room for iOS home indicator if present */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 4) #app as flex column to layer controls / canvas / options */
+/* 4) App container as flex column */
 #app {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: var(--button-margin);
-  padding-bottom: calc(var(--button-size) + 2*var(--button-margin));
   height: 100%;
+  /* gap at top for mobile-controls */
+  padding-top: var(--button-margin);
+  /* gap at bottom for options button + safe area */
+  padding-bottom: calc(var(--button-size) + 2*var(--button-margin) + env(safe-area-inset-bottom));
 }
 
-/* 5) Top mobile-controls */
+/* 5) Top mobile controls grid */
 #mobile-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -46,16 +50,17 @@ html, body {
 }
 #mobile-controls .mobile-button {
   min-height: var(--button-size);
+  font-size: 1rem;
   border: none;
   border-radius: 0.5rem;
   background: #2185d0;
   color: #fff;
-  font-size: 1rem;
 }
 
-/* 6) Canvas container: centered, with vertical margins */
+/* 6) Canvas container: centered with vertical margins */
 .canvas-container,
 #canvas-container {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +69,7 @@ html, body {
   margin: var(--button-margin) 0;
 }
 
-/* 7) Canvas: tall rectangle (9∶16) & transparent background */
+/* 7) Canvas: tall rectangle (9∶16), transparent background */
 canvas,
 #sd-canvas {
   width: 100%;
@@ -78,9 +83,9 @@ canvas,
 /* 8) Full-width Options button at bottom */
 #options-button {
   position: fixed;
-  left:  var(--mobile-padding);
+  left: var(--mobile-padding);
   right: var(--mobile-padding);
-  bottom: var(--button-margin);
+  bottom: calc(var(--button-margin) + env(safe-area-inset-bottom));
   z-index: 2;
 
   box-sizing: border-box;
@@ -104,7 +109,6 @@ canvas,
   opacity: 0;
   visibility: hidden;
   transition: opacity 200ms ease-in-out, visibility 200ms ease-in-out;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,7 +119,7 @@ canvas,
   visibility: visible;
 }
 
-/* 10) Modal card */
+/* 10) Modal window: centered, semi-opaque white card */
 .modal-content {
   background: rgba(255,255,255,0.9);
   border-radius: 1rem;
