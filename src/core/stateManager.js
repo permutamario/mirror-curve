@@ -13,44 +13,46 @@ import {
 // Internal application state
 // Loaded with the defaults
 let state = {
-    grid: new Grid(5,5),
-    curves: [],          // Permanent curves that stay visible
-    animationPath: null, // Current animation path (temporary)
-    settings: {
-        showGridLines:  false,
-        showGridPoints: false,
-        showMirrors:    true,
-        showCenterDots: true,
+	grid: new Grid(5,5),
+	curves: [],          // Permanent curves that stay visible
+	animationPath: null, // Current animation path (temporary)
+	settings: {
+            showGridLines:  false,
+            showGridPoints: false,
+            showMirrors:    true,
+            showCenterDots: true,
 
-        // spline options
-        smooth:  false,
-        tension: 0.5,
+            // spline options
+            smooth:  false,
+            tension: 0.5,
 
-        // animation options
-        animationSpeed: 3900/2, // pixels per second (new setting replacing duration)
-        animationStyle: 'curved', // default to jagged animation
+            // animation options
+            animationSpeed: 3900/2, // pixels per second (new setting replacing duration)
+            animationStyle: 'curved', // default to jagged animation
 
-        // overall palette
-        backgroundColor: 'transparent',
-        colorScheme: [
-            '#e41a1c',
-            '#377eb8',
-            '#4daf4a',
-            '#984ea3',
-            '#ff7f00',
-            '#ffff33'
-        ],
+            // overall palette
+            backgroundColor: 'transparent',
+            colorScheme: [
+		'#e41a1c',
+		'#377eb8',
+		'#4daf4a',
+		'#984ea3',
+		'#ff7f00',
+		'#ffff33'
+            ],
 
-        // individual line/point styles
-        lineStyles: {
-            grid:      { color: '#000000', width: 1 },
-            gridPoint: { color: '#888888', radius: 3 },
-            mirror:    { color: '#000000', width: 2 },
-            centerDot: { color: '#888888', radius: 3 },
-            curve:     { width: 2 }
-        }
-    }
-};
+            // individual line/point styles
+            lineStyles: {
+		grid:      { color: '#000000', width: 1 },
+		gridPoint: { color: '#888888', radius: 3 },
+		mirror:    { color: '#000000', width: 2 },
+		centerDot: { color: '#888888', radius: 3 },
+		curve:     { width: 2 }
+            }
+	}
+    };
+
+
 
 /**
  * Initialize application state and emit initial render
@@ -155,7 +157,7 @@ export function dispatch(action, payload) {
         break;
 
     case 'RANDOM':
-	state.grid.randomizeMirrors(0.2);
+	state.grid.randomizeMirrors(0.15);
 	// Clear all curves and animations when mirrors change
         state.curves = [];
         state.animationPath = null;
@@ -264,3 +266,8 @@ export function dispatch(action, payload) {
 export function getState() {
     return state;
 }
+
+/**
+ * This makes getState and changeState callable by everyone
+ */
+window.getState     = getState;

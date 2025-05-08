@@ -11,7 +11,167 @@ import {
 } from './baseControls.js';
 import { dispatch, getState } from '../core/stateManager.js';
 
+// Debounce function to limit how often a function can fire
+function debounce(func, wait) {
+  let timeout;
+  return function() {
+    const context = this;
+    const args = arguments;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), wait);
+  };
+}
+
+function setupMobileTouchHandlers(canvas) {
+  // Add touch events for mobile
+  canvas.addEventListener('touchstart', handleCanvasTouch, { passive: false });
+  
+  // Prevent scrolling when touching the canvas
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+  }, { passive: false });
+  
+  // Handle double-tap specially - prevent zoom
+  let lastTap = 0;
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if (tapLength < 500 && tapLength > 0) {
+      // Double tap detected
+      e.preventDefault();
+    }
+    lastTap = currentTime;
+  }, { passive: false });
+}
+
+function handleCanvasTouch(event) {
+  // Prevent default to avoid scrolling/zooming
+  event.preventDefault();
+  
+  // Use the first touch point
+  if (event.touches.length !== 1) return;
+  
+  const touch = event.touches[0];
+  
+  // Get canvas and its dimensions
+  const canvas = event.target;
+  const rect = canvas.getBoundingClientRect();
+  
+  // Calculate touch position relative to canvas
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  
+  // Convert to grid coordinates
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  // Get current grid state
+  const state = getState(); // Assuming getState is accessible
+  if (!state || !state.grid) return;
+  
+  const grid = state.grid;
+  
+  // Calculate the same grid layout parameters as in drawScreen
+  const minDimension = Math.min(width, height);
+  const padding = minDimension * 0.05;
+  const drawableWidth = width - (padding * 2);
+  const drawableHeight = height - (padding * 2);
+  
+  const cellSize = Math.min(drawableWidth / grid.cols, drawableHeight / grid.rows);
+  const cellW = cellSize;
+  const cellH = cellSize;
+  
+  const offsetX = padding + (drawableWidth - (cellSize * grid.cols)) / 2;
+  const offsetY = padding + (drawableHeight - (cellSize * grid.rows)) / 2;
+  
+  // Adjust coordinates to account for the grid offset
+  const gridX = x - offsetX;
+  const gridY = y - offsetY;
+  
+  // Convert to grid cell coordinates
+  const cellCol = Math.floor(gridX / cellW);
+  const cellRow = Math.floor(gridY / cellH);
+  
+  // Position within the cell (0-1)
+  const cellXPos = (gridX % cellW) / cellW;
+  const cellYPos = (gridY % cellH) / cellH;
+  
+  // Increase threshold for touch (fingers are less precise than mouse)
+  const threshold = 0.2; // 20% of cell size
+  
+  let gridLineId = null;
+  
+  // Check if we're close to a horizontal line
+  if (cellYPos < threshold) {
+    // Close to the top horizontal line
+    gridLineId = grid.generateGridLineId('h', cellRow, cellCol);
+  } else if (cellYPos > (1 - threshold)) {
+    // Close to the bottom horizontal line
+    gridLineId = grid.generateGridLineId('h', cellRow + 1, cellCol);
+  }
+  // Check if we're close to a vertical line
+  else if (cellXPos < threshold) {
+    // Close to the left vertical line
+    gridLineId = grid.generateGridLineId('v', cellRow, cellCol);
+  } else if (cellXPos > (1 - threshold)) {
+    // Close to the right vertical line
+    gridLineId = grid.generateGridLineId('v', cellRow, cellCol + 1);
+  }
+  
+  // If we found a grid line, toggle its mirror state
+  if (gridLineId && grid.getGridLine(gridLineId)) {
+    // Add visual feedback for the touch
+    addTouchFeedback(canvas, x, y);
+    
+    // Dispatch the toggle mirror action
+    dispatch('TOGGLE_MIRROR', { gridLineId });
+  }
+}
+
+// Add visual feedback when touching the canvas
+function addTouchFeedback(canvas, x, y) {
+  // Create a visual feedback element
+  const feedback = document.createElement('div');
+  feedback.classList.add('touch-feedback');
+  feedback.style.position = 'absolute';
+  feedback.style.left = `${x - 15}px`;
+  feedback.style.top = `${y - 15}px`;
+  feedback.style.width = '30px';
+  feedback.style.height = '30px';
+  feedback.style.borderRadius = '50%';
+  feedback.style.backgroundColor = 'rgba(33, 133, 208, 0.5)';
+  feedback.style.pointerEvents = 'none';
+  feedback.style.zIndex = '10';
+  feedback.style.transform = 'scale(0)';
+  feedback.style.transition = 'transform 0.3s, opacity 0.3s';
+  
+  // Add to the canvas container
+  canvas.parentElement.appendChild(feedback);
+  
+  // Trigger the animation
+  setTimeout(() => {
+    feedback.style.transform = 'scale(1)';
+  }, 10);
+  
+  // Remove after animation
+  setTimeout(() => {
+    feedback.style.opacity = '0';
+    setTimeout(() => {
+      feedback.remove();
+    }, 300);
+  }, 300);
+}
+
 export function setup() {
+  // Add viewport meta tag if not already present
+  if (!document.querySelector('meta[name="viewport"]')) {
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(meta);
+  }
+
   // Retrieve application state
   const state = getState();
   const settings = state.settings;
@@ -28,6 +188,9 @@ export function setup() {
   const canvas = document.createElement('canvas');
   canvas.id = 'sd-canvas';
   canvasContainer.appendChild(canvas);
+
+  // Setup touch handling for the canvas
+  setupMobileTouchHandlers(canvas);
 
   // --- Mobile Controls Grid ---
   const controls = document.createElement('div');
@@ -168,11 +331,59 @@ export function setup() {
   }
 
   // --- Canvas Resize & Redraw ---
-  function resizeCanvas() {
+  const debouncedResize = debounce(function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
     dispatch('REDRAW');
+  }, 250);
+  
+  window.addEventListener('resize', debouncedResize);
+  debouncedResize(); // Initial resize
+
+  // Fix for handling orientation changes
+  window.addEventListener('orientationchange', () => {
+    // Add slight delay to ensure new dimensions are calculated correctly
+    setTimeout(() => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      dispatch('REDRAW');
+    }, 500);
+  });
+
+  // Fix for iOS viewport height issues
+  function fixViewportHeight() {
+    // First, set CSS variable to actual viewport height
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    
+    // Check if we're on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+      // Add class for iOS-specific styling
+      document.documentElement.classList.add('ios-device');
+      
+      // Check for notch
+      if (window.screen && window.screen.height >= 812) {
+        document.documentElement.classList.add('has-notch');
+      }
+    }
   }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+
+  // Run on page load
+  fixViewportHeight();
+  
+  // Run on resize
+  window.addEventListener('resize', fixViewportHeight);
+  
+  // Fix for the "stuck" hover state on mobile
+  document.addEventListener('touchend', () => {
+    // Remove any hover states that might be stuck
+    const hoveredElements = document.querySelectorAll(':hover');
+    Array.from(hoveredElements).forEach(el => {
+      el.classList.remove('hover');
+      // Trigger a repaint to clear hover states
+      el.style.cssText = el.style.cssText;
+    });
+  });
 }

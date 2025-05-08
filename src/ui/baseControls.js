@@ -60,19 +60,38 @@ export function createTextbox({ id, placeholder = '', value = '', onChange }) {
  * @param {(newVal: number) => void} options.onChange
  * @returns {HTMLInputElement}
  */
+
 export function createInputBox({ id, value = 0, min = null, max = null, onChange }) {
   const input = document.createElement('input');
   input.type = 'number';
   input.id = id;
   input.value = String(value);
   input.step = '1';
+  input.pattern = '[0-9]*'; // Triggers numeric keyboard on iOS
+  input.inputMode = 'numeric'; // Modern way to trigger numeric keyboard
+  
   if (min !== null) input.min = String(min);
   if (max !== null) input.max = String(max);
+  
   input.classList.add('control-input');
+  
+  // Better handling of iOS focus/blur to prevent zoom issues
+  input.addEventListener('focus', () => {
+    // Add class when input is focused
+    document.body.classList.add('input-focused');
+  });
+  
+  input.addEventListener('blur', () => {
+    // Remove class when input loses focus
+    document.body.classList.remove('input-focused');
+  });
+  
+  // Improved input handling
   input.addEventListener('input', e => {
     const v = parseInt(e.target.value, 10);
     if (!isNaN(v)) onChange(v);
   });
+  
   return input;
 }
 /**

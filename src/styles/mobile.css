@@ -1,4 +1,3 @@
-
 /* mobile.css */
 
 /* 1) Global box-sizing so padding & borders stay inside width/height */
@@ -31,6 +30,7 @@ html, body {
   /* Prevent bounce/elastic scrolling on iOS */
   position: fixed;
   overflow: hidden;
+  touch-action: manipulation; /* Prevents double-tap to zoom */
 }
 
 /* 4) App container as flex column */
@@ -80,6 +80,11 @@ html, body {
   margin: var(--button-margin) 0;
   /* Ensure canvas container doesn't overflow */
   max-height: calc(var(--vh, 1vh) * 70);
+  position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* 7) Canvas: fallback height + aspect-ratio support */
@@ -91,7 +96,11 @@ canvas,
   background: transparent;
   display: block;
   /* Prevent iOS canvas scaling issues */
-  touch-action: none;
+  touch-action: none; /* Prevents default touch actions on canvas only */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* Disable callout */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
 }
 @supports (aspect-ratio: 9/16) {
   canvas,
@@ -119,7 +128,7 @@ canvas,
   border-radius: 0.5rem;
   background: #2185d0;
   color: #fff;
-  font-size: 1rem;
+  font-size: 16px; /* Minimum 16px to prevent zoom */
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   
   /* Improve touch experience on iOS */
@@ -189,7 +198,7 @@ canvas,
 .floating-tab-content input,
 .floating-tab-content select,
 .floating-tab-content button {
-  font-size: 0.9rem;
+  font-size: 16px; /* iOS won't zoom if font size is 16px or larger */
   border-radius: 0.5rem;
   border: 1px solid #ccc;
   padding: 0.5rem;
@@ -198,6 +207,7 @@ canvas,
   -moz-appearance: none;
   appearance: none;
   min-height: 44px; /* Minimum touch target size */
+  touch-action: manipulation;
 }
 .floating-tab-content input:focus,
 .floating-tab-content select:focus,
@@ -205,6 +215,63 @@ canvas,
   outline: none;
   box-shadow: 0 0 0 2px rgba(33,133,208,0.5);
   border-color: #2185d0;
+}
+
+/* Prevent zoom on inputs by ensuring adequate font size */
+input, 
+select, 
+textarea, 
+button {
+  font-size: 16px; /* iOS won't zoom if font size is 16px or larger */
+}
+
+/* Specifically target number inputs to prevent zoom */
+input[type="number"] {
+  font-size: 16px;
+}
+
+/* Add this to ensure inputs don't trigger zoom */
+.control-input, 
+.control-textbox, 
+.control-select,
+.control-slider {
+  font-size: 16px !important;
+  padding: 0.5rem;
+  touch-action: manipulation;
+}
+
+/* Fix focus handling for iOS */
+.input-focused {
+  position: relative;
+  z-index: 10;
+}
+
+/* Touch feedback animation */
+@keyframes touch-pulse {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.touch-feedback {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(33, 133, 208, 0.5);
+  animation: touch-pulse 0.4s ease-out forwards;
+  pointer-events: none;
+  position: absolute;
+  z-index: 10;
+}
+
+/* Make grid lines slightly thicker on mobile for easier tapping */
+.grid-line {
+  stroke-width: 2px; /* Adjust if your grid lines have a specific class */
+}
+
+/* Optional: add this if you want to highlight mirror lines differently */
+.mirror-line {
+  stroke-width: 3px;
+  stroke: #2185d0; /* Use your app's highlight color */
 }
 
 /* iOS-specific fixes */
