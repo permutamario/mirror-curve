@@ -1,14 +1,15 @@
 /**
  * CurveFinder - Simple helper functions to find mirror curves on a grid
  */
-
+import { MirrorCurve } from '../logic/mirrorCurve.js';
+import { Grid } from '../logic/grid.js';
 
 /**
  * Find the next available curve in a grid
  * @param {Grid} grid - The grid object containing mirrors
  * @returns {MirrorCurve|null} The next available curve or null if none
  */
-function findNextCurve(grid) {
+export function findNextCurve(grid) {
   console.log('Looking for the next available curve...');
   
   // Find any grid line that has a mirror and an unused direction
@@ -26,7 +27,7 @@ function findNextCurve(grid) {
       const curve = new MirrorCurve(gridLine, direction);
       
       try {
-        // Build the curve
+          // Build the curve
         const success = curve.buildCurve(grid);
         
         if (success) {
@@ -49,7 +50,7 @@ function findNextCurve(grid) {
  * @param {Grid} grid - The grid object containing mirrors
  * @returns {Array<MirrorCurve>} Array of all unique mirror curves
  */
-function findAllCurves(grid) {
+export function findAllCurves(grid) {
   const curves = [];
   
   // Reset used directions

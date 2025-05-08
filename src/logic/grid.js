@@ -2,7 +2,7 @@
  * Grid class for Mirror Curve application
  * Manages the grid structure and mirrors without any rendering dependencies
  */
-class Grid {
+export class Grid {
   // Direction constants
   static NW = 0;
   static NE = 1;
@@ -399,6 +399,31 @@ class Grid {
     }
     return count;
   }
+
+    /**
+     * Randomly toggles each interior mirror line with probability p.
+     * Boundary lines (all of which are always mirrors) are left unchanged.
+     * @param {number} p – probability in [0,1] of toggling each line’s mirror state
+     */
+    randomizeMirrors(p) {
+	if (p < 0 || p > 1) {
+	    throw new Error("Probability must be between 0 and 1");
+	}
+
+	for (const [id, gridLine] of this.gridLines.entries()) {
+	    // skip boundary lines
+	    const { type, row, col } = this.parseGridLineId(id);
+	    const isBoundary =
+		  (type === 'h' && (row === 0 || row === this.rows)) ||
+		  (type === 'v' && (col === 0 || col === this.cols));
+	    if (isBoundary) continue;
+
+	    // with probability p, flip its mirror status
+	    if (Math.random() < p) {
+		this.setMirror(id, !gridLine.isMirror);
+	    }
+	}
+    }
 
   /**
    * Generate a standard grid line ID

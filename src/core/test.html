@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mirror-Curve Core Modules Test Harness</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    fieldset { margin-bottom: 10px; padding: 10px; }
+    legend { font-weight: bold; }
+    button, input { margin: 5px; }
+    #output { width: 100%; height: 200px; }
+    #sd-canvas { border: 1px solid #000; }
+  </style>
+</head>
+<body>
+  <h1>Core Modules Test Harness</h1>
+  <div id="controls">
+    <fieldset>
+      <legend>EventEmitter</legend>
+      <button id="ee-emit">Emit TEST_EVENT</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>StateManager</legend>
+      Rows: <input type="number" id="sm-rows" value="3" min="1" />
+      Cols: <input type="number" id="sm-cols" value="3" min="1" />
+      <button id="sm-update">UPDATE_GRID</button>
+      <button id="sm-reset">RESET</button>
+      <button id="sm-next">NEXT_CURVE</button>
+      <button id="sm-get">GET_STATE</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>AnimationManager</legend>
+      <button id="am-enq1">Enqueue Curve A</button>
+      <button id="am-enq2">Enqueue Curve B</button>
+      <button id="am-start">Start Animation</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>ScreenDrawer</legend>
+      <button id="sd-drawGrid">Draw Grid</button>
+      <button id="sd-toggleMirror">Toggle Mirror on First Line</button>
+      <button id="sd-drawMirrors">Draw Mirrors</button>
+      <br />
+      <canvas id="sd-canvas" width="400" height="400"></canvas>
+    </fieldset>
+  </div>
+
+  <h2>Output</h2>
+  <textarea id="output" readonly></textarea>
+
+  <script type="module">
+    import { on, emit } from './src/core/eventEmitter.js';
+    import { initialize, dispatch, getState } from './src/core/stateManager.js';
+    import { enqueueCurve, startAnimation, onComplete } from './src/core/animationManager.js';
+    import { drawGrid, drawMirrors } from './src/core/screenDrawer.js';
+    import { Grid } from './src/logic/grid.js';
+
+    // Output logger
+    const outputEl = document.getElementById('output');
+    function log(msg) {
+      outputEl.value += msg + '\n';
+      outputEl.scrollTop = outputEl.scrollHeight;
+    }
+    console.log = (msg) => log('[LOG] ' + msg);
+    console.warn = (msg) => log('[WARN] ' + msg);
+    console.error = (msg) => log('[ERROR] ' + msg);
+
+    // --- EventEmitter Test ---
+    on('TEST_EVENT', () => log('TEST_EVENT handler called'));
+    document.getElementById('ee-emit').onclick = () => emit('TEST_EVENT');
+
+    // --- StateManager Test ---
+    on('render', ({ grid, curves }) => {
+      const gridDesc = grid ? `${grid.rows}x${grid.cols}` : 'null';
+      log(`render event: grid=${gridDesc}, curves=${JSON.stringify(curves)}`);
+    });
+    initialize();
+    document.getElementById('sm-update').onclick = () => {
+      const rows = +document.getElementById('sm-rows').value;
+      const cols = +document.getElementById('sm-cols').value;
+      dispatch('UPDATE_GRID', { rows, cols });
+    };
+    document.getElementById('sm-reset').onclick = () => dispatch('RESET');
+    document.getElementById('sm-next').onclick = () => dispatch('NEXT_CURVE', { id: 'dummy' });
+    document.getElementById('sm-get').onclick = () => log('getState: ' + JSON.stringify(getState()));
+
+    // --- AnimationManager Test ---
+    on('renderCurve', curve => log('renderCurve: ' + JSON.stringify(curve)));
+    onComplete(() => log('Animation complete'));
+    document.getElementById('am-enq1').onclick = () => enqueueCurve({ id: 'A' });
+    document.getElementById('am-enq2').onclick = () => enqueueCurve({ id: 'B' });
+    document.getElementById('am-start').onclick = () => startAnimation();
+
+    // --- ScreenDrawer Test ---
+    const canvas = document.getElementById('sd-canvas');
+    const ctx = canvas.getContext('2d');
+    let sdGrid = new Grid(3, 3);
+    sdGrid.initializeGridLines();
+    sdGrid.computeConnections();
+
+    document.getElementById('sd-drawGrid').onclick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid(ctx, sdGrid);
+      log('Grid drawn');
+    };
+    document.getElementById('sd-toggleMirror').onclick = () => {
+      const entry = sdGrid.gridLines.entries().next().value;
+      const [id, line] = entry;
+      line.isMirror = !line.isMirror;
+      log(`Toggled mirror on line ${id}: ${line.isMirror}`);
+    };
+    document.getElementById('sd-drawMirrors').onclick = () => {
+      drawMirrors(ctx, sdGrid);
+      log('Mirrors drawn');
+    };
+  </script>
+</body>
+</html>

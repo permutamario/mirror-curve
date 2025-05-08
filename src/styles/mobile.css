@@ -1,0 +1,164 @@
+/* mobile.css */
+
+/* 1) Global box-sizing so padding & borders stay inside width/height */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 2) Hide desktop controls */
+#controls {
+  display: none;
+}
+
+:root {
+  --mobile-padding: 5%;
+  --button-size: 44px;
+  --button-margin: 4px;
+}
+
+/* 3) Base reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 4) #app as flex column to layer controls / canvas / options */
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--button-margin);
+  padding-bottom: calc(var(--button-size) + 2*var(--button-margin));
+  height: 100%;
+}
+
+/* 5) Top mobile-controls */
+#mobile-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--button-margin);
+  width: 100%;
+  padding: 0 var(--mobile-padding);
+  z-index: 1;
+}
+#mobile-controls .mobile-button {
+  min-height: var(--button-size);
+  border: none;
+  border-radius: 0.5rem;
+  background: #2185d0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+/* 6) Canvas container: centered, with vertical margins */
+.canvas-container,
+#canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 var(--mobile-padding);
+  margin: var(--button-margin) 0;
+}
+
+/* 7) Canvas: tall rectangle (9∶16) & transparent background */
+canvas,
+#sd-canvas {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 80vh;
+  border-radius: 0.5rem;
+  background: transparent;
+  display: block;
+}
+
+/* 8) Full-width Options button at bottom */
+#options-button {
+  position: fixed;
+  left:  var(--mobile-padding);
+  right: var(--mobile-padding);
+  bottom: var(--button-margin);
+  z-index: 2;
+
+  box-sizing: border-box;
+  width: calc(100% - 2*var(--mobile-padding));
+  padding: 0.75rem;
+  text-align: center;
+
+  border: none;
+  border-radius: 0.5rem;
+  background: #2185d0;
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* 9) Modal overlay (semi-opaque backdrop) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease-in-out, visibility 200ms ease-in-out;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 10) Modal card */
+.modal-content {
+  background: rgba(255,255,255,0.9);
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 320px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: translateY(20px);
+  transition: transform 200ms ease-in-out;
+  max-height: 80%;
+  overflow-y: auto;
+}
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+/* 11) Modal inner layout */
+.floating-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* 12) Control groups */
+.control-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 13) Form element styling */
+.floating-tab-content input,
+.floating-tab-content select,
+.floating-tab-content button {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+}
+.floating-tab-content input:focus,
+.floating-tab-content select:focus,
+.floating-tab-content button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33,133,208,0.5);
+  border-color: #2185d0;
+}

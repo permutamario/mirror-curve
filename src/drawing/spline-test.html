@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spline Test Harness</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #canvas { border: 1px solid #000; cursor: crosshair; }
+    .controls { margin-top: 10px; }
+    button { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Cyclic Catmull–Rom Spline Tester</h1>
+  <p>Click on the canvas to place control points in order; the last point will connect back to the first.</p>
+  <canvas id="canvas" width="800" height="500"></canvas>
+  <div class="controls">
+    <button id="drawBtn">Draw Spline</button>
+    <button id="clearBtn">Clear</button>
+  </div>
+
+  <script type="module">
+    import { getSplinePoints } from './spline.js';
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let points = [];
+    const tension = 0.5;
+    const subdivisions = 20;
+
+    // Draw control points
+    function drawPoints() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'red';
+      points.forEach(pt => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // Handle canvas clicks
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      points.push({ x, y });
+      drawPoints();
+    });
+
+    // Draw the spline
+    document.getElementById('drawBtn').addEventListener('click', () => {
+      if (points.length < 2) return;
+      const splinePts = getSplinePoints(points, tension, subdivisions);
+      drawPoints();
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      splinePts.forEach((pt, i) => {
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    });
+
+    // Clear canvas and reset points
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      points = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+  </script>
+</body>
+</html>

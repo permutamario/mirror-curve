@@ -2,7 +2,9 @@
  * MirrorCurve class for Mirror Curve application
  * Represents a curve that traverses a grid following mirror reflection rules
  */
-class MirrorCurve {
+
+import { Grid } from "./grid.js";
+export class MirrorCurve {
   /**
    * Create a new MirrorCurve
    * @param {Object} startGridLine - The starting grid line
@@ -41,9 +43,9 @@ class MirrorCurve {
    * @param {Grid} grid - The grid object containing mirrors and connectivity
    * @returns {boolean} - True if the curve was successfully built
    */
-  buildCurve(grid) {
+    buildCurve(grid) {
     // Maximum number of segments to prevent infinite loops
-    const MAX_SEGMENTS = 1000;
+    const MAX_SEGMENTS = 1000000;
     
     // Mark the initial direction as used
     let currentGridLine = this.gridLines[0];
@@ -78,14 +80,15 @@ class MirrorCurve {
 	  
           // Mark the outgoingdirection as used
 	  grid.markDirectionUsed(nextLineId, nextDirection);
+	  const oppositeDirection = currentDirection === Grid.NW ? Grid.SE
+		: currentDirection === Grid.SE ? Grid.NW
+		: currentDirection === Grid.NE ? Grid.SW
+		: /* else SW */             Grid.NE;
+	  
 	  // Mark that incoming direction as used
 	  grid.markDirectionUsed(
 	      nextLineId,
-	      currentDirection === Grid.NW ? Grid.SE
-		  : currentDirection === Grid.SE ? Grid.NW
-		  : currentDirection === Grid.NE ? Grid.SW
-		  : /* else SW */        Grid.NE
-	  );
+	      oppositeDirection);
 
           
         // Check if we've formed a loop back to the start

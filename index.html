@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sona Drawing App</title>
+
+  <!-- Core styles -->
+  <link rel="stylesheet" href="src/styles/base.css" />
+  <!-- Theme stylesheet loaded based on device -->
+  <link id="theme-css" rel="stylesheet" href="" />
+
+  <script>
+    // Determine mobile vs desktop
+    window.isMobile = /iPhone|Android.*Mobile/.test(navigator.userAgent)
+      || window.matchMedia('(max-width: 767px)').matches;
+    // Load appropriate stylesheet
+    document.getElementById('theme-css').href =
+      window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
+  </script>
+</head>
+<body>
+  <!-- Root container for controls -->
+  <div id="app"></div>
+
+  <!-- Canvas element -->
+  <canvas id="sd-canvas"></canvas>
+
+  <!-- Bootstrap module -->
+  <script type="module" src="init.js"></script>
+
+  <!-- Load UI behavior based on device -->
+  <script type="module">
+    if (window.isMobile) {
+      import('./src/ui/mobileUI.js');
+    } else {
+      import('./src/ui/desktopUI.js');
+    }
+  </script>
+</body>
+</html>
