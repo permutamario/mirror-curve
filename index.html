@@ -15,10 +15,6 @@
   <!-- Base styles that apply to all devices -->
   <link rel="stylesheet" href="src/styles/base.css">
   
-  <!-- Direct stylesheet loading instead of preloading -->
-  <link rel="stylesheet" href="src/styles/mobile.css" media="(max-width: 767px)">
-  <link rel="stylesheet" href="src/styles/desktop.css" media="(min-width: 768px)">
-  
   <!-- iOS viewport height fix script -->
   <script>
     // iOS-specific viewport height fix
@@ -34,6 +30,9 @@
     window.addEventListener('resize', setViewportHeight);
     window.addEventListener('orientationchange', setViewportHeight);
   </script>
+  
+  <!-- Initialize the program first -->
+  <script type="module" src="init.js"></script>
   
   <script>
     // More robust device detection function
@@ -53,20 +52,25 @@
       return (hasTouch && isSmallScreen) || isIOS;
     }
     
-    // Set global flag when DOM is loaded
-    document.addEventListener('DOMContentLoaded', async () => {
-      window.isMobile = isMobileDevice();
+    // Set global flag
+    window.isMobile = isMobileDevice();
+    
+    // Load appropriate stylesheet
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load the appropriate stylesheet
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
+      document.head.appendChild(link);
       
-      try {
-        // Load appropriate UI module
-        const uiPath = window.isMobile
-          ? './src/ui/mobileUI.js'
-          : './src/ui/desktopUI.js';
-        const uiModule = await import(uiPath);
-        if (uiModule.setup) uiModule.setup();
-      } catch (err) {
-        console.error('Failed to load UI module:', err);
-      }
+      // Load appropriate UI module
+      import(window.isMobile ? './src/ui/mobileUI.js' : './src/ui/desktopUI.js')
+        .then(uiModule => {
+          if (uiModule.setup) uiModule.setup();
+        })
+        .catch(err => {
+          console.error('Failed to load UI module:', err);
+        });
     });
   </script>
 </head>
