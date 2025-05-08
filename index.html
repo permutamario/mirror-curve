@@ -2,42 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Ensure full-screen viewport on iOS -->
+  <!-- Full-screen and safe-area support on iOS -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sona Drawing App</title>
 
-  <!-- Core styles -->
+  <!-- Base styles -->
   <link rel="stylesheet" href="src/styles/base.css" />
-  <!-- Theme stylesheet loaded based on device -->
+  <!-- Theme stylesheet placeholder -->
   <link id="theme-css" rel="stylesheet" href="" />
 
-  <script>
-    // Determine mobile vs desktop
-    window.isMobile = /iPhone|Android.*Mobile/.test(navigator.userAgent)
+  <!-- Load appropriate theme and UI module as ES module -->
+  <script type="module">
+    // Determine if we're on a mobile device
+    const isMobile = /iPhone|iPad|Android/.test(navigator.userAgent)
       || window.matchMedia('(max-width: 767px)').matches;
+    window.isMobile = isMobile;
 
-    // Immediately set href for theme stylesheet
+    // Set theme CSS based on device
     const themeLink = document.getElementById('theme-css');
-    themeLink.href = window.isMobile
+    themeLink.href = isMobile
       ? 'src/styles/mobile.css'
       : 'src/styles/desktop.css';
 
-    // Once CSS has loaded, initialize UI
-    themeLink.addEventListener('load', () => {
-      import(window.isMobile
-        ? './src/ui/mobileUI.js'
-        : './src/ui/desktopUI.js'
-      ).then(uiModule => {
+    // Once CSS loads, dynamically import and initialize the correct UI module
+    themeLink.addEventListener('load', async () => {
+      try {
+        const uiPath = isMobile
+          ? './src/ui/mobileUI.js'
+          : './src/ui/desktopUI.js';
+        const uiModule = await import(uiPath);
         if (uiModule.setup) uiModule.setup();
-      }).catch(console.error);
+      } catch (err) {
+        console.error('Failed to load UI module:', err);
+      }
     });
   </script>
 
-  <!-- Viewport-height fix for iOS -->
+  <!-- Viewport-height hack for mobile browsers -->
   <script type="module" src="init.js" defer></script>
 </head>
 <body>
-  <!-- Root container for controls and canvas -->
+  <!-- Root mount point for UI -->
   <div id="app"></div>
 </body>
 </html>
