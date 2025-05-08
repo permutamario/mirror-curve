@@ -1,22 +1,40 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <!-- Improved viewport settings for iOS -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Add both mobile-web-app-capable and apple-mobile-web-app-capable -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
   <title>Sona Drawing App</title>
 
   <!-- Base styles that apply to all devices -->
   <link rel="stylesheet" href="src/styles/base.css">
   
-  <!-- Preload both theme stylesheets to avoid render blocking -->
-  <link rel="preload" href="src/styles/mobile.css" as="style">
-  <link rel="preload" href="src/styles/desktop.css" as="style">
+  <!-- Direct stylesheet loading instead of preloading -->
+  <link rel="stylesheet" href="src/styles/mobile.css" media="(max-width: 767px)">
+  <link rel="stylesheet" href="src/styles/desktop.css" media="(min-width: 768px)">
   
-  <!-- Apply device detection and styling immediately -->
+  <!-- iOS viewport height fix script -->
+  <script>
+    // iOS-specific viewport height fix
+    function setViewportHeight() {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    // Set initial value
+    setViewportHeight();
+    
+    // Update on resize and orientation change
+    window.addEventListener('resize', setViewportHeight);
+    window.addEventListener('orientationchange', setViewportHeight);
+  </script>
+  
   <script>
     // More robust device detection function
     function isMobileDevice() {
@@ -35,18 +53,12 @@
       return (hasTouch && isSmallScreen) || isIOS;
     }
     
-    // Set global flag
-    window.isMobile = isMobileDevice();
-    
-    // Create and inject appropriate stylesheet
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
-    document.head.appendChild(link);
-    
-    // Load appropriate UI module once DOM is ready
+    // Set global flag when DOM is loaded
     document.addEventListener('DOMContentLoaded', async () => {
+      window.isMobile = isMobileDevice();
+      
       try {
+        // Load appropriate UI module
         const uiPath = window.isMobile
           ? './src/ui/mobileUI.js'
           : './src/ui/desktopUI.js';
@@ -61,21 +73,5 @@
 <body>
   <!-- Root mount point for UI -->
   <div id="app"></div>
-  
-  <!-- iOS viewport height fix script -->
-  <script>
-    // iOS-specific viewport height fix
-    function setViewportHeight() {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    }
-    
-    // Set initial value
-    setViewportHeight();
-    
-    // Update on resize and orientation change
-    window.addEventListener('resize', setViewportHeight);
-    window.addEventListener('orientationchange', setViewportHeight);
-  </script>
 </body>
 </html>
