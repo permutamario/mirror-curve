@@ -1,3 +1,4 @@
+
 /* mobile.css */
 
 /* 1) Global box-sizing so padding & borders stay inside width/height */
@@ -10,7 +11,7 @@
   --button-size: 44px;
   --button-margin: 8px;
   --safe-bottom: env(safe-area-inset-bottom);
-  /* --vh is set by init.js to 1% of viewport height */
+  /* --vh is dynamically set by our script to 1% of the actual viewport height */
 }
 
 /* 2) Hide desktop controls */
@@ -22,10 +23,14 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: calc(var(--vh, 1vh) * 100);
+  height: 100%; /* Standard height */
+  height: calc(var(--vh, 1vh) * 100); /* iOS fix */
   width: 100%;
   overflow-x: hidden;
   padding-bottom: var(--safe-bottom);
+  /* Prevent bounce/elastic scrolling on iOS */
+  position: fixed;
+  overflow: hidden;
 }
 
 /* 4) App container as flex column */
@@ -33,9 +38,13 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 100%; /* Standard height */
   height: calc(var(--vh, 1vh) * 100 - var(--safe-bottom));
   padding-top: var(--button-margin);
   padding-bottom: calc(var(--button-size) + 2*var(--button-margin) + var(--safe-bottom));
+  /* Ensure content is scrollable within fixed body */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
 }
 
 /* 5) Top mobile controls grid */
@@ -54,6 +63,9 @@ html, body {
   border-radius: 0.5rem;
   background: #2185d0;
   color: #fff;
+  /* Improve touch targets for iOS */
+  padding: 10px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 6) Canvas container: centered with vertical margins */
@@ -66,23 +78,27 @@ html, body {
   width: 100%;
   padding: 0 var(--mobile-padding);
   margin: var(--button-margin) 0;
+  /* Ensure canvas container doesn't overflow */
+  max-height: calc(var(--vh, 1vh) * 70);
 }
 
 /* 7) Canvas: fallback height + aspect-ratio support */
 canvas,
 #sd-canvas {
   width: 100%;
-  height: 80vh;
+  height: calc(var(--vh, 1vh) * 70); /* iOS fix for percentage of viewport */
   border-radius: 0.5rem;
   background: transparent;
   display: block;
+  /* Prevent iOS canvas scaling issues */
+  touch-action: none;
 }
 @supports (aspect-ratio: 9/16) {
   canvas,
   #sd-canvas {
     aspect-ratio: 9 / 16;
     height: auto;
-    max-height: 80vh;
+    max-height: calc(var(--vh, 1vh) * 70);
   }
 }
 
@@ -105,12 +121,24 @@ canvas,
   color: #fff;
   font-size: 1rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  
+  /* Improve touch experience on iOS */
+  -webkit-tap-highlight-color: transparent;
+  /* Minimum touch target size for iOS */
+  min-height: 44px;
 }
 
 /* 9) Modal overlay (semi-opaque backdrop) */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Alternative to inset for better iOS support */
+  height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  width: 100%;
   background: rgba(0,0,0,0.4);
   opacity: 0;
   visibility: hidden;
@@ -135,8 +163,9 @@ canvas,
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   transform: translateY(20px);
   transition: transform 200ms ease-in-out;
-  max-height: 80%;
+  max-height: calc(var(--vh, 1vh) * 80);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
 }
 .modal-overlay.active .modal-content {
   transform: translateY(0);
@@ -164,6 +193,11 @@ canvas,
   border-radius: 0.5rem;
   border: 1px solid #ccc;
   padding: 0.5rem;
+  /* Improve form elements on iOS */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-height: 44px; /* Minimum touch target size */
 }
 .floating-tab-content input:focus,
 .floating-tab-content select:focus,
@@ -171,4 +205,25 @@ canvas,
   outline: none;
   box-shadow: 0 0 0 2px rgba(33,133,208,0.5);
   border-color: #2185d0;
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent pull-to-refresh and overscroll effects */
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-overscroll-behavior-y: none;
+  }
+  
+  /* Fix for iOS virtual keyboard causing layout issues */
+  .input-focused {
+    padding-bottom: 20vh;
+  }
+  
+  /* Fix for notched iPhones */
+  .has-notch {
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }
