@@ -72,7 +72,7 @@ export function setup() {
   // --- GRID INPUTS ---
   const rowsInput = createInputBox({
     id: 'rows-input',
-    value: state.grid.rows,
+    value: 5,
     min: 1,
     max: 40,
     onChange: rows => {
@@ -84,7 +84,7 @@ export function setup() {
 
   const colsInput = createInputBox({
     id: 'cols-input',
-    value: state.grid.cols,
+    value: 5,
     min: 1,
     max: 40,
     onChange: cols => {

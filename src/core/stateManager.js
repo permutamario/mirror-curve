@@ -13,7 +13,7 @@ import {
 // Internal application state
 // Loaded with the defaults
 let state = {
-    grid: null,
+    grid: new Grid(5,5),
     curves: [],          // Permanent curves that stay visible
     animationPath: null, // Current animation path (temporary)
     settings: {

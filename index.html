@@ -15,30 +15,29 @@
     // Determine mobile vs desktop
     window.isMobile = /iPhone|Android.*Mobile/.test(navigator.userAgent)
       || window.matchMedia('(max-width: 767px)').matches;
-    // Load appropriate stylesheet after DOMContentLoaded
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('theme-css').href =
-        window.isMobile ? 'src/styles/mobile.css' : 'src/styles/desktop.css';
+
+    // Immediately set href for theme stylesheet
+    const themeLink = document.getElementById('theme-css');
+    themeLink.href = window.isMobile
+      ? 'src/styles/mobile.css'
+      : 'src/styles/desktop.css';
+
+    // Once CSS has loaded, initialize UI
+    themeLink.addEventListener('load', () => {
+      import(window.isMobile
+        ? './src/ui/mobileUI.js'
+        : './src/ui/desktopUI.js'
+      ).then(uiModule => {
+        if (uiModule.setup) uiModule.setup();
+      }).catch(console.error);
     });
   </script>
+
+  <!-- Viewport-height fix for iOS -->
+  <script type="module" src="init.js" defer></script>
 </head>
 <body>
   <!-- Root container for controls and canvas -->
   <div id="app"></div>
-
-  <!-- Viewport-height fix for iOS -->
-  <script type="module" src="init.js"></script>
-
-  <!-- Load and initialize UI based on device -->
-  <script type="module">
-    (async () => {
-      const uiModule = await import(
-        window.isMobile 
-          ? './src/ui/mobileUI.js'
-          : './src/ui/desktopUI.js'
-      );
-      if (uiModule.setup) uiModule.setup();
-    })();
-  </script>
 </body>
 </html>
